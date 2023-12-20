@@ -9,10 +9,9 @@ class VecDB:
         else:
             self.index = None
 
-    def insert_records(self, records: list(dict)):
+    def insert_records(self, records):
         data = list()
         for i in range(len(records)):
-            print("alo")
             data.append(records[i].get("embed"))
 
         data = np.array(data).astype('float32')
