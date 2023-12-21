@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pprint
-import sys
 from heapq import heapify, heappop, heappush, heapreplace, nlargest, nsmallest
 from math import log2
 from operator import itemgetter
@@ -23,7 +22,6 @@ class HNSW(object):
         except ValueError:
             print(a)
             print(b)
-        
 
     def _distance(self, x, y):
         return self.distance_func(x, [y])[0]
@@ -52,12 +50,15 @@ class HNSW(object):
             self.distance = distance_func
             self.vectorized_distance = self.vectorized_distance_
 
-        self._m = m # No. of neighbours(connections) for a node in layer l 
-        self._ef = ef # No. of candidates chosen for query q (to be inserted or searched)
-        self._m0 = 2 * m if m0 is None else m0  # No. of Max connections in 0 layer , where it should be double of any layer
-        self._level_mult = 1 / log2(m) # ml factor for normalization of the randomness of layer choice
-        self._graphs = [] # list of cuurent found elements 
-        self._enter_point = None # No entry point at the initialization
+        self._m = m  # No. of neighbours(connections) for a node in layer l
+        # No. of candidates chosen for query q (to be inserted or searched)
+        self._ef = ef
+        # No. of Max connections in 0 layer , where it should be double of any layer
+        self._m0 = 2 * m if m0 is None else m0
+        # ml factor for normalization of the randomness of layer choice
+        self._level_mult = 1 / log2(m)
+        self._graphs = []  # list of cuurent found elements
+        self._enter_point = None  # No entry point at the initialization
 
         self._select = (
             self._select_heuristic if heuristic else self._select_naive)
@@ -146,7 +147,7 @@ class HNSW(object):
                 if len(layer_idx) < level_m:
                     return
                 if level < len(graphs) - 1:
-                    if any(p in graphs[level + 1] for p in layer_idx): 
+                    if any(p in graphs[level + 1] for p in layer_idx):
                         return
                 point, dist = pd.pop()
         graphs.append({idx: {}})
@@ -325,12 +326,12 @@ if __name__ == "__main__":
     from progressbar import *
     import pickle
 
-    f = h5py.File('glove-25-angular.hdf5','r')
+    f = h5py.File('glove-25-angular.hdf5', 'r')
     distances = f['distances']
     neighbors = f['neighbors']
     test = f['test']
     train = f['train']
-    #pprint.pprint(list(f.keys()))
+    # pprint.pprint(list(f.keys()))
     pprint.pprint(train.shape)
     # pprint.pprint()
 
@@ -338,9 +339,7 @@ if __name__ == "__main__":
     data = np.array(np.float32(np.random.random((num_elements, dim))))
     data_labels = np.arange(num_elements)
 
-    
     hnsw = HNSW("cosine", m0=5, ef=10, heuristic=True)
-    
 
     # widgets = ['Progress: ',Percentage(), ' ', Bar('#'),' ', Timer(),
     #     ' ', ETA()]
