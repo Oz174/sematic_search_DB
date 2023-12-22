@@ -4,3 +4,5 @@ Requirement already satisfied: memory-profiler in c:\users\oreo\appdata\local\an
 Requirement already satisfied: psutil in c:\users\oreo\appdata\local\anaconda3\envs\pyfaiss\lib\site-packages (from memory-profiler) (5.9.0)
 Requirement already satisfied: memory-profiler in c:\users\oreo\appdata\local\anaconda3\envs\pyfaiss\lib\site-packages (0.61.0)
 Requirement already satisfied: psutil in c:\users\oreo\appdata\local\anaconda3\envs\pyfaiss\lib\site-packages (from memory-profiler) (5.9.0)
+Requirement already satisfied: memory-profiler in c:\users\oreo\appdata\local\anaconda3\envs\pyfaiss\lib\site-packages (0.61.0)
+Requirement already satisfied: psutil in c:\users\oreo\appdata\local\anaconda3\envs\pyfaiss\lib\site-packages (from memory-profiler) (5.9.0)
