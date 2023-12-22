@@ -1,61 +1,96 @@
-import faiss
+# from typing import Dict,
 import numpy as np
+import os
+
+# from scipy.cluster.vq import kmeans2
+from sklearn.cluster import MiniBatchKMeans as KMeans
 
 
 class VecDB:
-    def __init__(self, file_path=None, create_index=False):
-        self.index = None
+    def __init__(self, file_path="saved_db", new_db=True) -> None:
+        if not os.path.exists(f"./{file_path}"):
+            os.mkdir(f"./{file_path}")
+        self.file_path = file_path
+                
 
-        if file_path:
-            if create_index:
-                # Replace 128 with the dimension of your vectors
-                self.index = faiss.IndexFlatL2(70)
-            else:
-                self.index = faiss.read_index(file_path)
+    def string_rep(self, vec):
+        return ",".join([str(e) for e in vec])
 
-    def add(self, raw_data, num_clusters):
-        if self.index is not None:
-            return
-        # Perform clustering using IVFPQ
-        # Assuming raw_data is a 2D array where each row is a vector
-        d = 70
+    def save_clusters(self, rows, labels, centroids):
+        files = [open(f"./{self.file_path}/cluster_{i}", "a") for i in range(len(centroids))]
+        centroid_file_path = f"./{self.file_path}/centroids"
+        print('before writing')
+        for i in range(len(rows)):
+            _id = self.mp[self.str_rep2_vec(rows[i])]
+            files[labels[i]].write(f"{_id},{self.string_rep(rows[i])}\n")
+        [f.close() for f in files]
+        with open(centroid_file_path, "a") as fout:
+            for centroid in centroids:
+                fout.write(f"{centroid}\n")
 
-        data = list()
-        for i in range(len(raw_data)):
-            data.append(raw_data[i].get("embed"))
+    def num_clusters(self, rows_count):
+        return int(np.ceil(rows_count / np.sqrt(rows_count)) * 3)
 
-        data = np.array(data).astype('float32')
-
-        quantizer = faiss.IndexFlatL2(d)
-        # Adjust parameters as needed
-        index = faiss.IndexIVFPQ(quantizer, d, num_clusters, 35, 8)
-
-        # Train the index with the coarse quantizer
-        rng = np.random.default_rng(100)
-        Xt = rng.random((2500, 70), dtype=np.float32)
-        index.train(Xt)
-
-        index.add(data)
-
-        # Save the index to the class member
-        self.index = index
-
-        return index
-
-    def search(self, query, top_k, metric='l2'):
-        # Perform search using the provided query
-        if self.index is None:
-            raise ValueError(
-                "Index not created. Use add() method to create the index.")
-
-        # Assuming query is a 2D array where each row is a vector
-        if metric == 'l2':
-            distances, indices = self.index.search(query, top_k)
-        elif metric == 'cosine':
-            # For cosine similarity, you may need to normalize the vectors
-            faiss.normalize_L2(query)
-            distances, indices = self.index.search(query, top_k)
+    def str_rep2_vec(self, vec):
+        return "".join(str(int(e * 10)) for e in vec)
+    
+    def cluster_data(self, rows):
+        if type(rows[0]) == dict:
+            self.mp = {self.str_rep2_vec(row["embed"]): row["id"] for row in rows}
+            print(self.num_clusters(len(rows)))
+            rows = [row["embed"] for row in rows]
         else:
-            raise ValueError("Invalid distance metric. Use 'l2' or 'cosine'.")
+            print('before mp')
+            self.mp = {self.str_rep2_vec(row): i for i, row in enumerate(rows)}
 
-        return indices[0]
+        print('begin clustering')
+        kmeans = KMeans(
+            n_clusters=self.num_clusters(len(rows)), n_init=1, verbose=True,
+            batch_size=int(1e5)
+        ).fit(rows)
+        print('after clustering')
+        labels = kmeans.predict(rows)
+        centroids = list(map(self.string_rep, kmeans.cluster_centers_))
+        print('before save clusters')
+        self.save_clusters(rows, labels, centroids)
+            
+
+    def insert_records(self, rows):
+        self.cluster_data(rows)
+
+    def retrive(self, query, top_k=5):
+        clusters = []
+        data = []
+        with open(f"./{self.file_path}/centroids", "r") as fin:
+            clusters.extend(
+                np.array(list(map(float, line.split(",")))) for line in fin.readlines()
+            )
+            scores = sorted(
+                [
+                    (self._cal_score(query, clusters[i])[0], i)
+                    for i in range(len(clusters))
+                ],
+                reverse=True,
+            )
+            top_m_clusters = [open(f"./{self.file_path}/cluster_{i}", "r") for _, i in scores[:50]]
+            data = []
+            for f in top_m_clusters:
+                data.extend(
+                    [
+                        (self._cal_score(query, np.array(list(map(float, line.split(",")[1:])))), int(line.split(",")[0]))
+                        for line in f.readlines()
+                    ]
+                )
+            # print(len(data))
+            data = sorted(data, reverse=True)
+            return [d[1] for d in data[:top_k]]
+                
+
+    def _cal_score(self, vec1, vec2):
+        dot_product = np.dot(vec1, vec2)
+        norm_vec1 = np.linalg.norm(vec1)
+        norm_vec2 = np.linalg.norm(vec2)
+        return dot_product / (norm_vec1 * norm_vec2)
+
+    def _build_index(self):
+        pass
