@@ -1,11 +1,10 @@
-# hnsw_adb_project
-semantic search using HNSW ( Hierarchical Navigable Small World) implemented by python
+# ivf_adb_project
+semantic search using IVF ( Inverted Index File) implemented by python
 TODOS:
-- [ ] Implement Skip List DS 
-- [ ] Implement HNSW DS
-    - [ ] Implement Insert 
-    - [ ] Implement Search
-- [ ] Create DBs with different sizes
-- [ ] Implement inverted file (to be able to store on disk)
-- [ ] Testing insertion and searching of HNSW
-- [ ] Measuring Performance
+- [x] Implement VecDB class 
+- [x] Implement IVF DS
+    - [x] Implement insert_clusters
+    - [x] Implement Kmeans Training for centroids 
+    - [x] Implement retrive
+- [x] Create DBs with different sizes (we skipped 5M,10M,15M and invested into 20M)
+- [x] Measuring Performance
