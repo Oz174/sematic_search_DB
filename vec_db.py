@@ -29,7 +29,8 @@ class VecDB:
                 fout.write(f"{centroid}\n")
 
     def num_clusters(self, rows_count):
-        return int(np.ceil(rows_count / np.sqrt(rows_count)) * 3)
+        self.no_clusters = int(np.ceil(rows_count / np.sqrt(rows_count)) * 3)
+        return self.no_clusters
 
     def str_rep2_vec(self, vec):
         return "".join(str(int(e * 10)) for e in vec)
@@ -72,7 +73,8 @@ class VecDB:
                 ],
                 reverse=True,
             )
-            top_m_clusters = [open(f"./{self.file_path}/cluster_{i}", "r") for _, i in scores[:100]]
+            numscores = 120 if len(clusters) > 3000 else 90 
+            top_m_clusters = [open(f"./{self.file_path}/cluster_{i}", "r") for _, i in scores[:120]]
             data = []
             for f in top_m_clusters:
                 data.extend(
