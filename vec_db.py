@@ -73,8 +73,8 @@ class VecDB:
                 ],
                 reverse=True,
             )
-            numscores = 120 if len(clusters) > 3000 else 90 
-            top_m_clusters = [open(f"./{self.file_path}/cluster_{i}", "r") for _, i in scores[:120]]
+            numscores = 125 if len(clusters) > 3000 else 90 
+            top_m_clusters = [open(f"./{self.file_path}/cluster_{i}", "r") for _, i in scores[:numscores]]
             data = []
             for f in top_m_clusters:
                 data.extend(
