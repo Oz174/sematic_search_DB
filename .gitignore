@@ -8,3 +8,6 @@ __pycache__/
 
 private_testing/*
 
+backup/*
+
+indices_zipped/*
