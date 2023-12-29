@@ -16,6 +16,9 @@ class VecDB:
     def string_rep(self, vec):
         return ",".join([str(e) for e in vec])
 
+    def str_rep2_vec(self, vec):
+        return "".join(str(int(e * 10)) for e in vec) #create unique ids for each vector stored in a centroid
+    
     def save_clusters(self, rows, labels, centroids):
         files = [open(f"./{self.file_path}/cluster_{i}", "a") for i in range(len(centroids))]
         centroid_file_path = f"./{self.file_path}/centroids"
@@ -29,19 +32,17 @@ class VecDB:
                 fout.write(f"{centroid}\n")
 
     def num_clusters(self, rows_count):
+        # walahi kan fe paper ll eqn di bs I lost it , hehe 
         self.no_clusters = int(np.ceil(rows_count / np.sqrt(rows_count)) * 3)
         return self.no_clusters
 
-    def str_rep2_vec(self, vec):
-        return "".join(str(int(e * 10)) for e in vec)
-    
     def cluster_data(self, rows):
         if type(rows[0]) == dict:
             self.mp = {self.str_rep2_vec(row["embed"]): row["id"] for row in rows}
             print(self.num_clusters(len(rows)))
             rows = [row["embed"] for row in rows]
         else:
-            print('before mp')
+            print('Creating mappings from vector to string IDs')
             self.mp = {self.str_rep2_vec(row): i for i, row in enumerate(rows)}
 
         print('begin clustering')
@@ -52,7 +53,7 @@ class VecDB:
         print('after clustering')
         labels = kmeans.predict(rows)
         centroids = list(map(self.string_rep, kmeans.cluster_centers_))
-        print('before save clusters')
+        print('before saving clusters')
         self.save_clusters(rows, labels, centroids)
             
 
@@ -73,7 +74,8 @@ class VecDB:
                 ],
                 reverse=True,
             )
-            numscores = 125 if len(clusters) > 3000 else 90 
+            # the numscores serves as _nprobe , which is the number of voroni diagram we use while seacrching for the query
+            numscores = 125 if len(clusters) > 3000 else 95 
             top_m_clusters = [open(f"./{self.file_path}/cluster_{i}", "r") for _, i in scores[:numscores]]
             data = []
             for f in top_m_clusters:
@@ -87,12 +89,9 @@ class VecDB:
             data = sorted(data, reverse=True)
             return [d[1] for d in data[:top_k]]
                 
-
+    #cosine_distance
     def _cal_score(self, vec1, vec2):
         dot_product = np.dot(vec1, vec2)
         norm_vec1 = np.linalg.norm(vec1)
         norm_vec2 = np.linalg.norm(vec2)
         return dot_product / (norm_vec1 * norm_vec2)
-
-    def _build_index(self):
-        pass
